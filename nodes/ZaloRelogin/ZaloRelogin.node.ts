@@ -395,22 +395,54 @@ export class ZaloRelogin implements INodeType {
 															userId: userId
 														};
 														
-														// Update existing credential
+														// Update existing credential - update cả name và data
 														const updateUrl = `${n8nApiUrl}/api/v1/credentials/${existingCredential.id}`;
 														console.error(`Updating credential at ${updateUrl}`);
-
-														await axios.patch(updateUrl, {
+														console.error(`Update payload:`, JSON.stringify({
 															name: credentialName,
 															data: credentialData
-														}, {
-															headers: {
-																'Content-Type': 'application/json',
-																'X-N8N-API-KEY': n8nApiKey as string
-															},
-														});
+														}, null, 2));
 
-														console.error('Credential updated successfully via n8n API');
-														console.error(`Credential ID: ${existingCredential.id}`);
+														try {
+															// Thử PATCH trước
+															await axios.patch(updateUrl, {
+																name: credentialName, // Update tên credential
+																data: credentialData
+															}, {
+																headers: {
+																	'Content-Type': 'application/json',
+																	'X-N8N-API-KEY': n8nApiKey as string
+																},
+															});
+
+															console.error('Credential updated successfully via n8n API (PATCH)');
+															console.error(`Credential ID: ${existingCredential.id}`);
+															console.error(`Credential name updated to: ${credentialName}`);
+														} catch (patchError: any) {
+															console.error(`PATCH failed: ${patchError.message}`);
+															if (patchError.response) {
+																console.error(`PATCH response status: ${patchError.response.status}`);
+																console.error(`PATCH response data:`, JSON.stringify(patchError.response.data));
+															}
+															
+															// Thử PUT nếu PATCH không hỗ trợ
+															console.error('Trying PUT method instead...');
+															await axios.put(updateUrl, {
+																name: credentialName,
+																type: 'zaloApi',
+																nodesAccess: existingCredential.nodesAccess || [],
+																data: credentialData
+															}, {
+																headers: {
+																	'Content-Type': 'application/json',
+																	'X-N8N-API-KEY': n8nApiKey as string
+																},
+															});
+
+															console.error('Credential updated successfully via n8n API (PUT)');
+															console.error(`Credential ID: ${existingCredential.id}`);
+															console.error(`Credential name updated to: ${credentialName}`);
+														}
 													} else {
 														console.error(`No existing credential found with phoneNumber ${phoneNumber}, creating new one...`);
 														

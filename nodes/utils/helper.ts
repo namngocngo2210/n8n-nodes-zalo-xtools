@@ -33,6 +33,13 @@ export async function saveFile(url: string): Promise<string | null> {
 }
 
 /**
+ * Alias cho saveFile - để tương thích với code cũ
+ */
+export async function saveImage(url: string): Promise<string | null> {
+	return saveFile(url);
+}
+
+/**
  * Xoá file đã lưu
  */
 export function removeFile(filePath: string): void {
@@ -43,4 +50,11 @@ export function removeFile(filePath: string): void {
 	} catch (error) {
 		console.error('Lỗi khi xoá file:', error);
 	}
+}
+
+/**
+ * Alias cho removeFile - để tương thích với code cũ
+ */
+export function removeImage(filePath: string): void {
+	removeFile(filePath);
 }

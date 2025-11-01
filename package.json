@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-zalo-xtools",
-	"version": "0.1.17",
+	"version": "0.1.24",
 	"description": "Các node hỗ trợ Zalo cho n8n đã được custom lại bởi NamNN",
 	"keywords": [
 		"n8n-community-node-package",
@@ -59,6 +59,7 @@
 		]
 	},
 	"devDependencies": {
+		"@types/node": "^22.15.17",
 		"@typescript-eslint/parser": "^7.15.0",
 		"concurrently": "^9.1.2",
 		"eslint": "^8.56.0",
@@ -68,16 +69,17 @@
 		"prettier": "^3.3.2",
 		"typescript": "^5.5.3"
 	},
+	"optionalDependencies": {
+		"sharp": "^0.32.6"
+	},
 	"peerDependencies": {
 		"n8n-core": ">=1.0.0",
-		"n8n-workflow": ">=1.0.0"
+		"n8n-workflow": "*"
 	},
 	"dependencies": {
 		"axios": "^1.8.4",
+		"image-size": "^2.0.2",
 		"pnpm": "^10.6.5",
-		"zca-js": "^2.0.0-beta.24"
-	},
-	"optionalDependencies": {
-		"sharp": "^0.32.1"
+		"zca-js": "2.0.4"
 	}
 }
