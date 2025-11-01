@@ -8,7 +8,15 @@ import {
 import { API, ThreadType, Zalo } from 'zca-js';
 import { saveFile, removeFile } from '../utils/helper';
 import fs from 'fs';
-import sharp from 'sharp';
+
+// Dynamic import sharp để xử lý trường hợp không có
+let sharp: any;
+try {
+	sharp = require('sharp');
+} catch (error) {
+	// sharp không khả dụng, sẽ dùng fallback
+	sharp = null;
+}
 
 let api: API | undefined;
 
@@ -211,14 +219,34 @@ export class ZaloSendMessage implements INodeType {
 		async function imageMetadataGetter(filePath: string) {
 			try {
 				const data = await fs.promises.readFile(filePath);
-				const metadata = await sharp(data).metadata();
-				return {
-					height: metadata.height || 0,
-					width: metadata.width || 0,
-					size: metadata.size || data.length,
-				};
+				
+				// Sử dụng sharp nếu có, nếu không thì fallback
+				if (sharp) {
+					try {
+						const metadata = await sharp(data).metadata();
+						return {
+							height: metadata.height || 0,
+							width: metadata.width || 0,
+							size: metadata.size || data.length,
+						};
+					} catch (sharpError) {
+						// Sharp error, fallback to file size only
+						return {
+							height: 0,
+							width: 0,
+							size: data.length,
+						};
+					}
+				} else {
+					// Sharp không khả dụng, chỉ trả về size
+					return {
+						height: 0,
+						width: 0,
+						size: data.length,
+					};
+				}
 			} catch (error) {
-				// Fallback nếu không đọc được metadata
+				// Fallback nếu không đọc được file
 				const data = await fs.promises.readFile(filePath);
 				return {
 					height: 0,
