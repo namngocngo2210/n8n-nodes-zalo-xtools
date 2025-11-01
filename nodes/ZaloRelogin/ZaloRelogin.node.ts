@@ -6,18 +6,17 @@ import {
 	NodeOperationError,
 } from 'n8n-workflow';
 import { Zalo } from 'zca-js';
-import * as path from 'path';
 import axios from 'axios';
 
-export class ZaloLoginByQr implements INodeType {
+export class ZaloRelogin implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'Zalo Login Via QR Code',
-		name: 'zaloLoginByQr',
+		displayName: 'Zalo Relogin',
+		name: 'zaloRelogin',
 		group: ['Zalo'],
 		version: 1,
-		description: 'LĐăng nhập Zalo bằng QR code và lưu thông tin vào Credentia',
+		description: 'Đăng nhập lại Zalo bằng QR code và cập nhật credential cũ dựa trên số điện thoại',
 		defaults: {
-			name: 'Zalo Login Via QR Code',
+			name: 'Zalo Relogin',
 		},
 		// @ts-ignore
 		inputs: ['main'],
@@ -34,7 +33,7 @@ export class ZaloLoginByQr implements INodeType {
 				name: 'n8nZaloApi',
 				required: true,
 				displayName: 'n8n Account Credential',
-			  },
+			},
 		],
 		properties: [
 			{
@@ -55,8 +54,8 @@ export class ZaloLoginByQr implements INodeType {
 		const fileName = 'zalo-qr-code.png'; // Fixed filename
 
 		// Get the credentials if provided
-		let zaloCredential : any;
-		let n8nCredential : any;
+		let zaloCredential: any;
+		let n8nCredential: any;
 
 		// Try to get Zalo API credential
 		try {
@@ -87,8 +86,6 @@ export class ZaloLoginByQr implements INodeType {
 		}
 
 		try {
-			
-
 			const zaloOptions: any = {
 				selfListen: true,
 				logging: true,
@@ -170,8 +167,6 @@ export class ZaloLoginByQr implements INodeType {
 				console.error('IMEI:', imei ? imei : 'None');
 				console.error('User Agent:', userAgent ? userAgent : 'None');
 				console.error('=== END CREDENTIALS ===');
-
-
 			};
 
 			// Function to set up event listeners
@@ -287,164 +282,158 @@ export class ZaloLoginByQr implements INodeType {
 									// Wrap trong async IIFE để có thể dùng await
 									(async () => {
 										try {
-											// Create debug file
-											
-
 											// Save credentials to output directory
 											if (cookie.length > 0 || imei || userAgent) {
-												
+												// Lấy thông tin user một lần để dùng cho cả credential name và credential data
+												let credentialName = 'Zalo API Credentials'; // Default name
+												let userName = '';
+												let phoneNumber = '';
+												let userId = '';
 
-											// Lấy thông tin user một lần để dùng cho cả credential name và credential data
-											let credentialName = 'Zalo API Credentials'; // Default name
-											let userName = '';
-											let phoneNumber = '';
-											let userId = '';
-											
-											try {
-												// Login lại với cookie, imei, userAgent vừa nhận được để lấy user info
-												const tempZalo = new Zalo();
-												const tempApi = await tempZalo.login({
-													cookie: cookie,
+												try {
+													// Login lại với cookie, imei, userAgent vừa nhận được để lấy user info
+													const tempZalo = new Zalo();
+													const tempApi = await tempZalo.login({
+														cookie: cookie,
+														imei: imei,
+														userAgent: userAgent,
+													} as any);
+
+													if (tempApi) {
+														// Lấy userId của chính mình
+														userId = tempApi.getOwnId();
+														console.error('Got user ID:', userId);
+
+														// Lấy thông tin user
+														const userInfo = await tempApi.getUserInfo(userId);
+														console.error('User info received:', JSON.stringify(userInfo).substring(0, 300));
+
+														// getUserInfo trả về object có changed_profiles hoặc unchanged_profiles
+														// Tìm thông tin user trong changed_profiles hoặc unchanged_profiles
+														let userProfile: any = null;
+														if (userInfo.changed_profiles && userInfo.changed_profiles[userId]) {
+															userProfile = userInfo.changed_profiles[userId];
+														} else if (userInfo.unchanged_profiles && userInfo.unchanged_profiles[userId]) {
+															userProfile = userInfo.unchanged_profiles[userId];
+														}
+
+														// Lấy name và phoneNumber từ user profile
+														phoneNumber = userProfile?.phoneNumber || '';
+														userName = userProfile?.displayName || userProfile?.zaloName || userProfile?.name || '';
+
+														console.error('User name:', userName);
+														console.error('Phone number:', phoneNumber);
+														console.error('User ID:', userId);
+
+														// Tạo credential name từ số điện thoại và tên
+														if (phoneNumber && userName) {
+															credentialName = `${userName} - ${phoneNumber}`;
+														} else if (userName) {
+															credentialName = userName;
+														} else if (phoneNumber) {
+															credentialName = phoneNumber;
+														} else if (userId) {
+															credentialName = `Zalo Account - ${userId}`;
+														}
+
+														console.error('Credential name:', credentialName);
+													}
+												} catch (userInfoError: any) {
+													console.error('Error getting user info:', userInfoError.message);
+													console.error('Will use default credential name and empty name/phoneNumber/userId');
+												}
+
+												const credentialData = {
+													cookie: JSON.stringify(cookie),
 													imei: imei,
 													userAgent: userAgent,
-												} as any);
-
-												if (tempApi) {
-													// Lấy userId của chính mình
-													userId = tempApi.getOwnId();
-													console.error('Got user ID:', userId);
-
-													// Lấy thông tin user
-													const userInfo = await tempApi.getUserInfo(userId);
-													console.error('User info received:', JSON.stringify(userInfo).substring(0, 300));
-
-													// getUserInfo trả về object có changed_profiles hoặc unchanged_profiles
-													// Tìm thông tin user trong changed_profiles hoặc unchanged_profiles
-													let userProfile: any = null;
-													if (userInfo.changed_profiles && userInfo.changed_profiles[userId]) {
-														userProfile = userInfo.changed_profiles[userId];
-													} else if (userInfo.unchanged_profiles && userInfo.unchanged_profiles[userId]) {
-														userProfile = userInfo.unchanged_profiles[userId];
-													}
-
-													// Lấy name và phoneNumber từ user profile
-													phoneNumber = userProfile?.phoneNumber || '';
-													userName = userProfile?.displayName || userProfile?.zaloName || userProfile?.name || '';
-													
-													console.error('User name:', userName);
-													console.error('Phone number:', phoneNumber);
-													console.error('User ID:', userId);
-
-													// Tạo credential name từ số điện thoại và tên
-													if (phoneNumber && userName) {
-														credentialName = `${userName} - ${phoneNumber}`;
-													} else if (userName) {
-														credentialName = userName;
-													} else if (phoneNumber) {
-														credentialName = phoneNumber;
-													} else if (userId) {
-														credentialName = `Zalo Account - ${userId}`;
-													}
-													
-													console.error('Credential name:', credentialName);
-												}
-											} catch (userInfoError: any) {
-												console.error('Error getting user info:', userInfoError.message);
-												console.error('Will use default credential name and empty name/phoneNumber/userId');
-											}
-
-											const credentialData = {
-												cookie: JSON.stringify(cookie),
-												imei: imei,
-												userAgent: userAgent,
-												proxy: proxy || '',
-												name: userName,
-												phoneNumber: phoneNumber,
-												userId: userId
-											};
-
-											
-
-											// Try to automatically create the credential by directly calling the n8n API
-											try {
-												console.error('Attempting to create Zalo credential via n8n API');
-
-												// Prepare the credential data for n8n API
-												const credentialApiData = {
-													name: credentialName,
-													type: 'zaloApi',
-													nodesAccess: [],
-													data: credentialData
+													proxy: proxy || '',
+													name: userName,
+													phoneNumber: phoneNumber,
+													userId: userId
 												};
 
-												// Try different ports that n8n might be running on
-												const ports = [5678];
+												// Try to update existing credential instead of creating new one
+												try {
+													console.error('Attempting to find and update Zalo credential via n8n API');
 
-												// Function to create credential on a specific port
-												const createCredentialOnPort = async (port: number) => {
-													const n8nApi =  await this.getCredentials('n8nZaloApi');
+													// Get n8n API credentials
+													const n8nApi = await this.getCredentials('n8nZaloApi');
 													const n8nApiUrl = n8nApi.url as string;
-													const fullApiUrl = `${n8nApiUrl}/api/v1/credentials`;
-
 													const n8nApiKey = n8nApi.apiKey as string;
-													console.error(`Trying to create credential via n8n API at ${fullApiUrl}`);
 
-													try {
-														await axios.post(fullApiUrl, credentialApiData,
-															{
-														   headers: {
-															 'Content-Type': 'application/json',
-															 'X-N8N-API-KEY': n8nApiKey as string
-														   },
-														 })
-														 
-														console.error('Credential created successfully via n8n API');
-														console.error('Credential ID:');
-														  
-														return true;
-													} catch (apiError: any) {
-														console.error(`Error creating credential on port ${port}:`, apiError.message);
-														return false;
-													}
-												};
+													// List all credentials to find matching phoneNumber
+													const listCredentialsUrl = `${n8nApiUrl}/api/v1/credentials`;
+													console.error(`Listing credentials at ${listCredentialsUrl}`);
 
-												// Try each port sequentially
-												let credentialCreated = false;
+													const listResponse = await axios.get(listCredentialsUrl, {
+														headers: {
+															'Content-Type': 'application/json',
+															'X-N8N-API-KEY': n8nApiKey as string
+														},
+													});
 
-												// Use an async IIFE to handle the async calls
-												(async () => {
-													// Try each port one by one
-													for (const port of ports) {
-														try {
-															const result = await createCredentialOnPort.call(this, port);
-															if (result) {
-																credentialCreated = true;
-																break;
-															}
-														} catch (error) {
-															console.error(`Error trying port ${port}:`, error.message);
-														}
+													const allCredentials = listResponse.data.data || [];
+													console.error(`Found ${allCredentials.length} credentials`);
+
+													// Find credential with matching phoneNumber
+													let existingCredential = null;
+													if (phoneNumber) {
+														existingCredential = allCredentials.find((cred: any) => {
+															return cred.type === 'zaloApi' && 
+																   cred.data && 
+																   cred.data.phoneNumber === phoneNumber;
+														});
 													}
 
+													if (existingCredential) {
+														console.error(`Found existing credential with phoneNumber ${phoneNumber}, updating...`);
+														
+														// Update existing credential
+														const updateUrl = `${n8nApiUrl}/api/v1/credentials/${existingCredential.id}`;
+														console.error(`Updating credential at ${updateUrl}`);
 
-												})().catch(error => {
-													console.error('Error in credential creation:', error.message);
-												});
+														await axios.patch(updateUrl, {
+															name: credentialName,
+															data: credentialData
+														}, {
+															headers: {
+																'Content-Type': 'application/json',
+																'X-N8N-API-KEY': n8nApiKey as string
+															},
+														});
 
-												if (!credentialCreated) {
-													console.error('Could not create credential via n8n API on any port.');
-													console.error('Credential info saved to file. You can create it manually using:');
-													console.error('node auto-create-zalo-credential.js');
+														console.error('Credential updated successfully via n8n API');
+														console.error(`Credential ID: ${existingCredential.id}`);
+													} else {
+														console.error(`No existing credential found with phoneNumber ${phoneNumber}, creating new one...`);
+														
+														// Create new credential if not found
+														const createUrl = `${n8nApiUrl}/api/v1/credentials`;
+														await axios.post(createUrl, {
+															name: credentialName,
+															type: 'zaloApi',
+															nodesAccess: [],
+															data: credentialData
+														}, {
+															headers: {
+																'Content-Type': 'application/json',
+																'X-N8N-API-KEY': n8nApiKey as string
+															},
+														});
+
+														console.error('New credential created successfully via n8n API');
+													}
+												} catch (error: any) {
+													console.error(`Error updating/creating credential: ${error.message}`);
+													if (error.response) {
+														console.error('Response data:', JSON.stringify(error.response.data));
+													}
 												}
-											} catch (error: any) {
-												console.error(`Error creating credential: ${error.message}`);
-												console.error('Credential info saved to file. You can create it manually using:');
-												console.error('node auto-create-zalo-credential.js');
+											} else {
+												console.error('=== NO CREDENTIALS TO SAVE ===');
+												console.error('No login information available to save');
 											}
-										} else {
-											console.error('=== NO CREDENTIALS TO SAVE ===');
-											console.error('No login information available to save');
-										}
 										} catch (fileError: any) {
 											console.error('Error saving credentials:', fileError.message);
 										}
@@ -529,16 +518,12 @@ export class ZaloLoginByQr implements INodeType {
 			// Add credential creation instructions to the output
 			if (returnData[0] && returnData[0].json) {
 				if (!selectedCredential) {
-					returnData[0].json.credentialInstructions = 'Credentials have been saved to file. Credentials will be created automatically if n8n API credentials are provided.';
-					returnData[0].json.credentialFilePath = path.join(process.cwd(), 'output', 'zalo-credentials.json');
-					returnData[0].json.autoCreateScript = 'node auto-create-zalo-credential.js';
-					returnData[0].json.autoCreateApi = 'Credentials will be created automatically via n8n API if n8n API credentials are provided.';
+					returnData[0].json.credentialInstructions = 'Credentials will be updated automatically if matching phoneNumber found, otherwise new credential will be created.';
 				} else if (selectedCredential === n8nCredential) {
-					returnData[0].json.credentialInstructions = 'Using n8n account credential. New Zalo credentials will be created automatically after successful login.';
+					returnData[0].json.credentialInstructions = 'Using n8n account credential. Existing Zalo credentials will be updated after successful login.';
 					returnData[0].json.credentialName = selectedCredential.name || 'Unknown';
 					returnData[0].json.credentialId = selectedCredential.id || 'Unknown';
 					returnData[0].json.credentialType = 'n8nZaloApi';
-					returnData[0].json.autoCreateApi = 'Credentials will be created automatically via n8n API after successful login.';
 				} else {
 					returnData[0].json.credentialInstructions = 'Using existing Zalo credentials from the selected credential.';
 					returnData[0].json.credentialName = selectedCredential.name || 'Unknown';
@@ -561,3 +546,4 @@ export class ZaloLoginByQr implements INodeType {
 		}
 	}
 }
+

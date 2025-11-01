@@ -45,21 +45,25 @@ export class ZaloApi implements ICredentialType {
 			description: 'HTTP proxy to use for Zalo API requests',
 		},
 		{
-			displayName: 'Support Code',
-			name: 'supportCode',
+			displayName: 'Name',
+			name: 'name',
 			type: 'string',
 			default: '',
-			description: 'Support code for Zalo API',
+			description: 'Name of the Zalo account (auto-filled after QR login)',
 		},
 		{
-			displayName: 'License Key',
-			name: 'licenseKey',
+			displayName: 'Phone Number',
+			name: 'phoneNumber',
 			type: 'string',
 			default: '',
-			description: 'License key for Zalo API',
-			typeOptions: {
-				password: true,
-			},
+			description: 'Phone number of the Zalo account (auto-filled after QR login)',
+		},
+		{
+			displayName: 'User ID',
+			name: 'userId',
+			type: 'string',
+			default: '',
+			description: 'User ID of the Zalo account (auto-filled after QR login)',
 		},
 	];
 

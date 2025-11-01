@@ -9,15 +9,6 @@ import { API, ThreadType, Zalo } from 'zca-js';
 import { saveFile, removeFile } from '../utils/helper';
 import fs from 'fs';
 
-// Dynamic import sharp để xử lý trường hợp không có
-let sharp: any;
-try {
-	sharp = require('sharp');
-} catch (error) {
-	// sharp không khả dụng, sẽ dùng fallback
-	sharp = null;
-}
-
 let api: API | undefined;
 
 export class ZaloSendMessage implements INodeType {
@@ -216,43 +207,90 @@ export class ZaloSendMessage implements INodeType {
 
 		// Initialize imageMetadataGetter for V2 migration
 		// Required for sending images/gifs by file path in zca-js v2.0.0+
+		// Sharp is optional - only try to load it when needed
+		const self = this;
 		async function imageMetadataGetter(filePath: string) {
 			try {
+				console.log(`[imageMetadataGetter] Getting metadata for file: ${filePath}`);
+				self.logger.info(`Getting metadata for file: ${filePath}`);
+				
+				if (!fs.existsSync(filePath)) {
+					const errorMsg = `File not found: ${filePath}`;
+					console.error(`[imageMetadataGetter] ${errorMsg}`);
+					self.logger.error(errorMsg);
+					throw new NodeOperationError(self.getNode(), errorMsg);
+				}
+				
 				const data = await fs.promises.readFile(filePath);
+				console.log(`[imageMetadataGetter] File read successfully, size: ${data.length} bytes`);
+				
+				// Try to load sharp dynamically (optional dependency)
+				let sharp: any = null;
+				try {
+					// eslint-disable-next-line
+					sharp = require('sharp');
+					console.log('[imageMetadataGetter] Sharp module loaded successfully');
+					self.logger.info('Sharp module loaded successfully');
+				} catch (requireError: any) {
+					// sharp không khả dụng - sẽ dùng fallback
+					console.warn(`[imageMetadataGetter] Sharp module not available: ${requireError.message}, using fallback metadata`);
+					self.logger.warn('Sharp module not available, using fallback metadata');
+					sharp = null;
+				}
 				
 				// Sử dụng sharp nếu có, nếu không thì fallback
 				if (sharp) {
 					try {
 						const metadata = await sharp(data).metadata();
-						return {
+						const result = {
 							height: metadata.height || 0,
 							width: metadata.width || 0,
 							size: metadata.size || data.length,
 						};
-					} catch (sharpError) {
+						console.log(`[imageMetadataGetter] Metadata extracted: ${JSON.stringify(result)}`);
+						self.logger.info(`Metadata extracted: ${JSON.stringify(result)}`);
+						return result;
+					} catch (sharpError: any) {
 						// Sharp error, fallback to file size only
-						return {
+						console.warn(`[imageMetadataGetter] Sharp error: ${sharpError.message}, using fallback`);
+						self.logger.warn(`Sharp error: ${sharpError.message}, using fallback`);
+						const fallback = {
 							height: 0,
 							width: 0,
 							size: data.length,
 						};
+						console.log(`[imageMetadataGetter] Using fallback: ${JSON.stringify(fallback)}`);
+						return fallback;
 					}
 				} else {
 					// Sharp không khả dụng, chỉ trả về size
-					return {
+					const fallback = {
 						height: 0,
 						width: 0,
 						size: data.length,
 					};
+					console.log(`[imageMetadataGetter] Using fallback metadata (size only): ${data.length} bytes, result: ${JSON.stringify(fallback)}`);
+					self.logger.info(`Using fallback metadata (size only): ${data.length} bytes`);
+					return fallback;
 				}
-			} catch (error) {
+			} catch (error: any) {
+				console.error(`[imageMetadataGetter] Error getting metadata: ${error.message}`, error);
+				self.logger.error(`Error getting metadata: ${error.message}`);
 				// Fallback nếu không đọc được file
-				const data = await fs.promises.readFile(filePath);
-				return {
-					height: 0,
-					width: 0,
-					size: data.length,
-				};
+				try {
+					const data = await fs.promises.readFile(filePath);
+					const fallback = {
+						height: 0,
+						width: 0,
+						size: data.length,
+					};
+					console.log(`[imageMetadataGetter] Fallback after error: ${JSON.stringify(fallback)}`);
+					return fallback;
+				} catch (readError: any) {
+					console.error(`[imageMetadataGetter] Cannot read file: ${readError.message}`, readError);
+					self.logger.error(`Cannot read file: ${readError.message}`);
+					throw readError;
+				}
 			}
 		}
 
@@ -316,20 +354,43 @@ export class ZaloSendMessage implements INodeType {
 
 				// Add attachments if specified
 				if (attachments && attachments.attachment && attachments.attachment.length > 0) {
+					this.logger.info(`Processing ${attachments.attachment.length} attachment(s)`);
 					messageContent.attachments = [];
 					for (const attachment of attachments.attachment) {
 						let fileData;
 						if (attachment.type === 'url') {
-							 fileData = await saveFile(attachment.imageUrl);
+							this.logger.info(`Downloading attachment from URL: ${attachment.imageUrl}`);
+							fileData = await saveFile(attachment.imageUrl);
+							if (!fileData) {
+								this.logger.warn(`Failed to download attachment from URL: ${attachment.imageUrl}`);
+								continue; // Skip this attachment if download failed
+							}
+							this.logger.info(`Attachment downloaded successfully: ${fileData}`);
 						}
 						
-
-						messageContent.attachments.push(fileData);
+						if (fileData) {
+							messageContent.attachments.push(fileData);
+							this.logger.info(`Added attachment to message: ${fileData}`);
+						}
+					}
+					
+					// If no valid attachments were added, clear the array
+					if (messageContent.attachments.length === 0) {
+						this.logger.warn('No valid attachments were added, removing attachments from message');
+						delete messageContent.attachments;
+					} else {
+						this.logger.info(`Total attachments to send: ${messageContent.attachments.length}`);
 					}
 				}
 
 				// Log the parameters before sending
 				this.logger.info(`Sending message with parameters: ${JSON.stringify(messageContent)}`);
+				console.log('=== ZALO SEND MESSAGE DEBUG ===');
+				console.log('Message Content:', JSON.stringify(messageContent, null, 2));
+				console.log('Has attachments:', !!messageContent.attachments);
+				console.log('Attachments count:', messageContent.attachments?.length || 0);
+				console.log('Attachments:', messageContent.attachments);
+				console.log('=== END DEBUG ===');
 				// Send the message
 				if (!api) {
 					throw new NodeOperationError(this.getNode(), 'Zalo API not initialized');
@@ -371,6 +432,12 @@ export class ZaloSendMessage implements INodeType {
 						threadId,
 						threadType: type,
 						messageContent,
+						debug: {
+							hasAttachments: !!messageContent.attachments,
+							attachmentsCount: messageContent.attachments?.length || 0,
+							attachments: messageContent.attachments || [],
+							messageText: messageContent.msg,
+						},
 					},
 				});
 				
