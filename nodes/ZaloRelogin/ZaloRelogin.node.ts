@@ -343,16 +343,6 @@ export class ZaloRelogin implements INodeType {
 													console.error('Will use default credential name and empty name/phoneNumber/userId');
 												}
 
-												const credentialData = {
-													cookie: JSON.stringify(cookie),
-													imei: imei,
-													userAgent: userAgent,
-													proxy: proxy || '',
-													name: userName,
-													phoneNumber: phoneNumber,
-													userId: userId
-												};
-
 												// Try to update existing credential instead of creating new one
 												try {
 													console.error('Attempting to find and update Zalo credential via n8n API');
@@ -389,6 +379,22 @@ export class ZaloRelogin implements INodeType {
 													if (existingCredential) {
 														console.error(`Found existing credential with phoneNumber ${phoneNumber}, updating...`);
 														
+														// Giữ nguyên proxy từ credential cũ nếu có
+														const existingProxy = existingCredential.data?.proxy || '';
+														const finalProxy = existingProxy || proxy || '';
+														console.error(`Keeping existing proxy: ${existingProxy || 'none'}, using: ${finalProxy}`);
+														
+														// Tạo credentialData với proxy từ credential cũ
+														const credentialData = {
+															cookie: JSON.stringify(cookie),
+															imei: imei,
+															userAgent: userAgent,
+															proxy: finalProxy, // Giữ nguyên proxy cũ
+															name: userName,
+															phoneNumber: phoneNumber,
+															userId: userId
+														};
+														
 														// Update existing credential
 														const updateUrl = `${n8nApiUrl}/api/v1/credentials/${existingCredential.id}`;
 														console.error(`Updating credential at ${updateUrl}`);
@@ -407,6 +413,17 @@ export class ZaloRelogin implements INodeType {
 														console.error(`Credential ID: ${existingCredential.id}`);
 													} else {
 														console.error(`No existing credential found with phoneNumber ${phoneNumber}, creating new one...`);
+														
+														// Tạo credentialData mới với proxy từ node parameter
+														const credentialData = {
+															cookie: JSON.stringify(cookie),
+															imei: imei,
+															userAgent: userAgent,
+															proxy: proxy || '',
+															name: userName,
+															phoneNumber: phoneNumber,
+															userId: userId
+														};
 														
 														// Create new credential if not found
 														const createUrl = `${n8nApiUrl}/api/v1/credentials`;
