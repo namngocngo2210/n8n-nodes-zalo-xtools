@@ -7,6 +7,8 @@ import {
 } from 'n8n-workflow';
 import { API, ThreadType, Zalo } from 'zca-js';
 import { saveFile, removeFile } from '../utils/helper';
+import fs from 'fs';
+import sharp from 'sharp';
 
 let api: API | undefined;
 
@@ -204,9 +206,33 @@ export class ZaloSendMessage implements INodeType {
 		const imeiFromCred = zaloCred.imei as string;
 		const userAgentFromCred = zaloCred.userAgent as string;
 
+		// Initialize imageMetadataGetter for V2 migration
+		// Required for sending images/gifs by file path in zca-js v2.0.0+
+		async function imageMetadataGetter(filePath: string) {
+			try {
+				const data = await fs.promises.readFile(filePath);
+				const metadata = await sharp(data).metadata();
+				return {
+					height: metadata.height || 0,
+					width: metadata.width || 0,
+					size: metadata.size || data.length,
+				};
+			} catch (error) {
+				// Fallback nếu không đọc được metadata
+				const data = await fs.promises.readFile(filePath);
+				return {
+					height: 0,
+					width: 0,
+					size: data.length,
+				};
+			}
+		}
+
 		// Initialize Zalo API
 		try {
-			const zalo = new Zalo();
+			const zalo = new Zalo({
+				imageMetadataGetter,
+			});
 			api = await zalo.login({ 
 				cookie: cookieFromCred,
 				imei: imeiFromCred, 
