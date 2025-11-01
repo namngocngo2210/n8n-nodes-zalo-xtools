@@ -172,7 +172,7 @@ export class ZaloPoll implements INodeType {
                             throw new NodeOperationError(this.getNode(), 'Zalo API not initialized', { itemIndex: i });
                         }
 
-                        const response = await api.getPollDetail(poll_id);
+                        const response = await api.getPollDetail(Number(poll_id));
 
                         this.logger.info('Get poll successfully', { response});
 

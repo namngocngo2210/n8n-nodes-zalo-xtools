@@ -287,9 +287,7 @@ export class ZaloSendMessage implements INodeType {
 						id : threadId,
 						type: type
 					}
-					const result = await api.sendTypingEvent(recipentObj.id, {
-						type: recipentObj.type
-					});
+					const result = await api.sendTypingEvent(recipentObj.id, recipentObj.type);
 					if (!!result) {
 						this.logger.info("Send! typing event")
 					}

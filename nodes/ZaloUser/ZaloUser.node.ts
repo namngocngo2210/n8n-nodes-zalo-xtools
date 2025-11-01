@@ -171,7 +171,7 @@ export class ZaloUser implements INodeType {
 						const dob = this.getNodeParameter('dob', i) as any;
 						const gender = this.getNodeParameter('gender', i) as number;
 
-						const response = await api.updateProfile(name, dob, gender);
+						const response = await api.updateProfile({ profile: { name, dob, gender } });
 
 						returnData.push({
 							json: {

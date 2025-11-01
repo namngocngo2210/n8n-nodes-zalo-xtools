@@ -1,6 +1,6 @@
-#  N8N-NODES-ZALO-TOOLS
+#  N8N-NODES-ZALO-XTOOLS
 
-Nodes-Zalo-Tools cho n8n là một bộ công cụ cho phép bạn tích hợp các tính năng của Zalo cá nhân vào quy trình làm việc của n8n. Bộ công cụ này bao gồm các node để tương tác với Zalo qua nhiều chức năng.
+Nodes-Zalo-XTools cho n8n là một bộ công cụ cho phép bạn tích hợp các tính năng của Zalo cá nhân vào quy trình làm việc của n8n. Bộ công cụ này bao gồm các node để tương tác với Zalo qua nhiều chức năng.
 
 ## Tính năng
 - **Login Zalo Via QR**: Đăng nhập Zalo thông qua QR
@@ -34,5 +34,5 @@ Nodes-Zalo-Tools cho n8n là một bộ công cụ cho phép bạn tích hợp c
 
 ## Hỗ trợ
 
-- [Báo cáo lỗi](https://github.com/ChickenAI/zalo-node) : https://github.com/ChickenAI/zalo-node
-- [Liên hệ hỗ trợ](mailto:trungduong13082000@gmail.com) : trungduong13082000@gmail.com
+- [Báo cáo lỗi](https://github.com/namngocngo2210/n8n-nodes-zalo-xtools) : https://github.com/namngocngo2210/n8n-nodes-zalo-xtools
+- [Liên hệ hỗ trợ](mailto:namngocngo2210@gmail.com) : namngocngo2210@gmail.com

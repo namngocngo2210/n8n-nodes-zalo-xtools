@@ -215,6 +215,7 @@ export class ZaloLoginByQr implements INodeType {
 			// Generate QR code
 			const qrCodePromise = new Promise<string>(async (resolve, reject) => {
 				let isResolved = false;
+				let accountDisplayName = ''; // Lưu tên account từ QR scan
 
 				// Set timeout for QR code generation
 				const timeoutId = setTimeout(() => {
@@ -260,7 +261,8 @@ export class ZaloLoginByQr implements INodeType {
 							case 2: // QRCodeScanned
 								console.error('=== QR CODE SCANNED ===');
 								if (qrEvent?.data) {
-									console.error('User:', qrEvent.data.display_name);
+									accountDisplayName = qrEvent.data.display_name || '';
+									console.error('User:', accountDisplayName);
 									console.error('Avatar:', qrEvent.data.avatar ? 'Yes' : 'No');
 								}
 								break;
@@ -293,14 +295,18 @@ export class ZaloLoginByQr implements INodeType {
 											
 
 											// Create credential info file for auto-creation
-											const credentialName = 'Zalo API Credentials';
+											// Sử dụng tên account nếu có, nếu không thì dùng tên mặc định
+											const credentialName = accountDisplayName 
+												? `Zalo Account: ${accountDisplayName}` 
+												: 'Zalo API Credentials';
 											const credentialData = {
 												cookie: JSON.stringify(cookie),
 												imei: imei,
 												userAgent: userAgent,
 												proxy: proxy || '',
 												supportCode: '',
-												licenseKey: ''
+												licenseKey: '',
+												accountName: accountDisplayName || ''
 											};
 
 											
