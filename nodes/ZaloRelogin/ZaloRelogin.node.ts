@@ -12,6 +12,7 @@ export class ZaloRelogin implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Zalo Relogin',
 		name: 'zaloRelogin',
+		// @ts-ignore
 		group: ['Zalo'],
 		version: 1,
 		description: 'Đăng nhập lại Zalo bằng QR code và cập nhật credential cũ dựa trên số điện thoại',

@@ -24,6 +24,12 @@ export const zaloUserOperations: INodeProperties[] = [
 				action: 'Gửi lời mời kết bạn',
 			},
 			{
+				name: 'Hủy lời mời kết bạn',
+				value: 'undoFriendRequest',
+				description: 'Hủy lời mời kết bạn đã gửi',
+				action: 'Hủy lời mời kết bạn',
+			},
+			{
 				name: 'Chặn người dùng',
 				value: 'blockUser',
 				description: 'Chặn người dùng',
@@ -212,6 +218,22 @@ export const zaloUserFields: INodeProperties[] = [
 		},
 		default: '',
 		description: 'Tin nhắn kèm theo lời mời kết bạn',
+	},
+
+	// Undo Friend Request
+	{
+		displayName: 'User ID',
+		name: 'userId',
+		type: 'string',
+		required: true,
+		displayOptions: {
+			show: {
+				resource: ['zaloUser'],
+				operation: ['undoFriendRequest'],
+			},
+		},
+		default: '',
+		description: 'ID của người dùng cần hủy lời mời kết bạn',
 	},
 
 	// Block User

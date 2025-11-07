@@ -14,6 +14,7 @@ export class ZaloGetUserId implements INodeType {
 		displayName: 'Zalo Get User ID',
 		name: 'zaloGetUserId',
 		icon: 'file:../shared/zalo.svg',
+		// @ts-ignore
 		group: ['Zalo'],
 		version: 1,
 		description: 'Lấy User ID của tài khoản Zalo hiện tại',

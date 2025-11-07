@@ -15,6 +15,7 @@ export class ZaloUser implements INodeType {
 		displayName: 'Zalo User',
 		name: 'zaloUser',
 		icon: 'file:../shared/zalo.svg',
+		// @ts-ignore
 		group: ['Zalo'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
@@ -101,6 +102,23 @@ export class ZaloUser implements INodeType {
 						const message = this.getNodeParameter('message', i) as string;
 
 						const response = await api.sendFriendRequest(message, userId);
+
+						returnData.push({
+							json: {
+                                status: "Thành công",
+                                response: response,
+                            },
+							pairedItem: {
+								item: i,
+							},
+						});
+					}
+
+					// Hủy lời mời kết bạn
+					else if (operation === 'undoFriendRequest') {
+						const userId = this.getNodeParameter('userId', i) as string;
+
+						const response = await api.undoFriendRequest(userId);
 
 						returnData.push({
 							json: {
