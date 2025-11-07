@@ -65,6 +65,16 @@ export class ZaloApi implements ICredentialType {
 			default: '',
 			description: 'User ID of the Zalo account (auto-filled after QR login)',
 		},
+		{
+			displayName: 'License Code',
+			name: 'licenseCode',
+			type: 'string',
+			default: '',
+			typeOptions: {
+				password: true,
+			},
+			description: 'License code required to use Zalo nodes (enter manually after credential creation)',
+		},
 	];
 
 }
