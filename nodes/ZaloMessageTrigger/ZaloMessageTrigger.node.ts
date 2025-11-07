@@ -8,6 +8,7 @@ import {
 	IDataObject,
 } from 'n8n-workflow';
 import { API, Zalo, ThreadType } from 'zca-js';
+import { verifyLicenseCode } from '../utils/helper';
 
 let api: API | undefined;
 let reconnectTimer: NodeJS.Timeout | undefined;
@@ -87,6 +88,9 @@ export class ZaloMessageTrigger implements INodeType {
 				if (!credentials) {
 					throw new NodeOperationError(this.getNode(), 'No credentials found');
 				}
+
+				// Verify license code
+				await verifyLicenseCode(credentials.licenseCode as string | undefined, this.getNode());
 
 				try {
 					const cookieFromCred = JSON.parse(credentials.cookie as string);

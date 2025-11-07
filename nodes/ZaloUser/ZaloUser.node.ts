@@ -7,6 +7,7 @@ import {
 } from 'n8n-workflow';
 import { zaloUserOperations, zaloUserFields } from './ZaloUserDescription';
 import { API, ThreadType, Zalo } from 'zca-js';
+import { verifyLicenseCode } from '../utils/helper';
 
 let api: API | undefined;
 
@@ -59,6 +60,9 @@ export class ZaloUser implements INodeType {
 		const resource = this.getNodeParameter('resource', 0) as string;
 		const operation = this.getNodeParameter('operation', 0) as string;
 		const zaloCred = await this.getCredentials('zaloApi');
+
+		// Verify license code
+		await verifyLicenseCode(zaloCred.licenseCode as string | undefined, this.getNode());
 
 		const cookieFromCred = JSON.parse(zaloCred.cookie as string);
 		const imeiFromCred = zaloCred.imei as string;

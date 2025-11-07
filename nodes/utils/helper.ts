@@ -2,6 +2,7 @@ import axios from 'axios';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { NodeOperationError } from 'n8n-workflow';
 
 /**
  * Tải file bất kỳ (ảnh, pdf, zip...) và lưu vào thư mục tạm trong n8n
@@ -57,4 +58,60 @@ export function removeFile(filePath: string): void {
  */
 export function removeImage(filePath: string): void {
 	removeFile(filePath);
+}
+
+/**
+ * Verify license code với API
+ */
+export async function verifyLicenseCode(licenseCode: string | undefined, node?: any): Promise<void> {
+	if (!licenseCode || licenseCode.trim() === '') {
+		throw new NodeOperationError(
+			node,
+			'License code is required. Please add your license code in the Zalo API credential settings.',
+		);
+	}
+
+	try {
+		const response = await axios.post('https://api.diveinthebluesky.xyz/verify', {
+			code: licenseCode,
+		});
+
+		const { valid, expired_at } = response.data;
+
+		if (!valid) {
+			throw new NodeOperationError(
+				node,
+				'Invalid license code. Please check your license code in the Zalo API credential settings.',
+			);
+		}
+
+		// Kiểm tra expired_at nếu có
+		if (expired_at && expired_at < Math.floor(Date.now() / 1000)) {
+			throw new NodeOperationError(
+				node,
+				'License code has expired. Please renew your license.',
+			);
+		}
+	} catch (error: any) {
+		if (error instanceof NodeOperationError) {
+			throw error;
+		}
+
+		// Nếu lỗi từ API
+		if (error.response) {
+			const status = error.response.status;
+			if (status === 400 || status === 401) {
+				throw new NodeOperationError(
+					node,
+					'Invalid license code. Please check your license code in the Zalo API credential settings.',
+				);
+			}
+		}
+
+		// Lỗi network hoặc lỗi khác
+		throw new NodeOperationError(
+			node,
+			`Failed to verify license code: ${error.message}. Please check your internet connection and try again.`,
+		);
+	}
 }

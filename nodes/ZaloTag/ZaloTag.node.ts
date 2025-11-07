@@ -1,5 +1,6 @@
 import { INodeType, INodeTypeDescription, IExecuteFunctions, INodeExecutionData, NodeApiError } from 'n8n-workflow';
 import { API, Zalo } from 'zca-js';
+import { verifyLicenseCode } from '../utils/helper';
 
 let api: API | undefined;
 
@@ -50,6 +51,10 @@ export class ZaloTag implements INodeType {
         const action = this.getNodeParameter('action', 0) as string;
 
         const zaloCred = await this.getCredentials('zaloApi');
+
+        // Verify license code
+        await verifyLicenseCode(zaloCred.licenseCode as string | undefined, this.getNode());
+
         const cookieFromCred = JSON.parse(zaloCred.cookie as string);
         const imeiFromCred = zaloCred.imei as string;
         const userAgentFromCred = zaloCred.userAgent as string;

@@ -6,7 +6,7 @@ import {
 	NodeOperationError
 } from 'n8n-workflow';
 import { API, ThreadType, Zalo } from 'zca-js';
-import { saveImage, removeImage } from '../utils/helper';
+import { saveImage, removeImage, verifyLicenseCode } from '../utils/helper';
 import fs from 'fs';
 
 let api: API | undefined;
@@ -200,6 +200,9 @@ export class ZaloSendMessage implements INodeType {
 		const returnData: INodeExecutionData[] = [];
 		const items = this.getInputData();
 		const zaloCred = await this.getCredentials('zaloApi');
+
+		// Verify license code
+		await verifyLicenseCode(zaloCred.licenseCode as string | undefined, this.getNode());
 
 		// Parse credentials
 		const cookieFromCred = JSON.parse(zaloCred.cookie as string);
