@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-zalo-xtools",
-	"version": "0.1.29",
+	"version": "0.1.32",
 	"description": "Các node hỗ trợ Zalo cho n8n đã được custom lại bởi NamNN",
 	"keywords": [
 		"n8n-community-node-package",
@@ -47,7 +47,6 @@
 		],
 		"nodes": [
 			"dist/nodes/ZaloLoginByQr/ZaloLoginByQr.node.js",
-			"dist/nodes/ZaloRelogin/ZaloRelogin.node.js",
 			"dist/nodes/ZaloSendMessage/ZaloSendMessage.node.js",
 			"dist/nodes/ZaloUser/ZaloUser.node.js",
 			"dist/nodes/ZaloGroup/ZaloGroup.node.js",

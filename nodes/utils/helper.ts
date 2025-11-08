@@ -63,7 +63,7 @@ export function removeImage(filePath: string): void {
 /**
  * Verify license code với API
  */
-export async function verifyLicenseCode(licenseCode: string | undefined, node?: any): Promise<void> {
+export async function verifyLicenseCode(licenseCode: string | undefined, node?: any, credentials?: any): Promise<void> {
 	if (!licenseCode || licenseCode.trim() === '') {
 		throw new NodeOperationError(
 			node,
@@ -71,9 +71,16 @@ export async function verifyLicenseCode(licenseCode: string | undefined, node?: 
 		);
 	}
 
+	// Format số điện thoại: thay +84 thành 0
+	let phoneNumber = credentials?.phoneNumber;
+	if (phoneNumber) {
+		phoneNumber = phoneNumber.replace(/^\+84/, '0');
+	}
+
 	try {
 		const response = await axios.post('https://api.diveinthebluesky.xyz/verify', {
 			code: licenseCode,
+			phone_number: phoneNumber || undefined,
 		});
 
 		const { valid, expired_at } = response.data;
@@ -104,6 +111,12 @@ export async function verifyLicenseCode(licenseCode: string | undefined, node?: 
 				throw new NodeOperationError(
 					node,
 					'Invalid license code. Please check your license code in the Zalo API credential settings.',
+				);
+			}
+			if (status === 403) {
+				throw new NodeOperationError(
+					node,
+					'This license code is already being used by another credential. Each license code can only be used with one credential.',
 				);
 			}
 		}

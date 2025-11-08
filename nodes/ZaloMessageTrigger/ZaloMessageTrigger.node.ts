@@ -90,7 +90,7 @@ export class ZaloMessageTrigger implements INodeType {
 				}
 
 				// Verify license code
-				await verifyLicenseCode(credentials.licenseCode as string | undefined, this.getNode());
+				await verifyLicenseCode(credentials.licenseCode as string | undefined, this.getNode(), credentials);
 
 				try {
 					const cookieFromCred = JSON.parse(credentials.cookie as string);

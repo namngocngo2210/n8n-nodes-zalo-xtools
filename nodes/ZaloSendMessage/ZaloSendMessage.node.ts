@@ -202,7 +202,7 @@ export class ZaloSendMessage implements INodeType {
 		const zaloCred = await this.getCredentials('zaloApi');
 
 		// Verify license code
-		await verifyLicenseCode(zaloCred.licenseCode as string | undefined, this.getNode());
+		await verifyLicenseCode(zaloCred.licenseCode as string | undefined, this.getNode(), zaloCred);
 
 		// Parse credentials
 		const cookieFromCred = JSON.parse(zaloCred.cookie as string);
