@@ -75,6 +75,16 @@ export class ZaloApi implements ICredentialType {
 			},
 			description: 'License code required to use Zalo nodes (enter manually after credential creation)',
 		},
+		{
+			displayName: 'API Key',
+			name: 'apiKey',
+			type: 'string',
+			default: '',
+			typeOptions: {
+				password: true,
+			},
+			description: 'API Key dùng để xác thực license, sẽ gửi vào header x-api-key',
+		},
 	];
 
 }

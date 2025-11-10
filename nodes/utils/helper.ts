@@ -78,10 +78,18 @@ export async function verifyLicenseCode(licenseCode: string | undefined, node?: 
 	}
 
 	try {
-		const response = await axios.post('https://api.diveinthebluesky.xyz/verify', {
-			code: licenseCode,
-			phone_number: phoneNumber || undefined,
-		});
+		const response = await axios.post(
+			'https://license.ndk.vn/verify',
+			{
+				code: licenseCode,
+				phone_number: phoneNumber || undefined,
+			},
+			{
+				headers: credentials?.apiKey
+					? { 'x-api-key': credentials.apiKey as string }
+					: undefined,
+			},
+		);
 
 		const { valid, expired_at } = response.data;
 
