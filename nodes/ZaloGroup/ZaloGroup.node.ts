@@ -122,14 +122,14 @@ export class ZaloGroup implements INodeType {
 						const groupId = this.getNodeParameter('groupId', i) as string;
 						const userId = this.getNodeParameter('userId', i) as string;
 
-						const response = await api.addGroupDeputy(groupId, userId);
+						// API signature: addGroupDeputy(memberId, groupId)
+						const response = await api.addGroupDeputy(userId, groupId);
 
 						returnData.push({
-							json: 
-                            {
-                                status: "Thành công",
+							json: {
+								status: "Thành công",
 								response: response,
-                            },
+							},
 							pairedItem: {
 								item: i,
 							},
@@ -176,7 +176,8 @@ export class ZaloGroup implements INodeType {
 						const groupId = this.getNodeParameter('groupId', i) as string;
 						const newName = this.getNodeParameter('newName', i) as string;
 
-						const response = await api.changeGroupName(groupId, newName);
+						// API signature: changeGroupName(name, groupId)
+						const response = await api.changeGroupName(newName, groupId);
 
 						returnData.push({
 							json: response,

@@ -97,11 +97,9 @@ export class ZaloFriendTrigger implements INodeType {
 
 
 					// Add message event listener
-				api.listener.on('friend_event', async (event: FriendEvent) => {
-					const nodeEventTypes = (this.getNodeParameter('eventTypes', 0) as Array<string | number>)
-						.map((eventType) => Number(eventType))
-						.filter((eventType) => !Number.isNaN(eventType)) as FriendEventType[];
-					if (nodeEventTypes.includes(event.type)) {
+					api.listener.on('friend_event', async (event: FriendEvent) => {
+						const nodeEventTypes = this.getNodeParameter('eventTypes', 0) as FriendEventType[];
+						if(nodeEventTypes.includes(event.type)) {
 							this.helpers.httpRequest({
 									method: 'POST',
 									url: webhookUrl,
