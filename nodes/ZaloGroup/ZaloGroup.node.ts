@@ -257,6 +257,23 @@ export class ZaloGroup implements INodeType {
 							},
 						});
 					}
+
+					// Giải tán nhóm
+					else if (operation === 'disperseGroup') {
+						const groupId = this.getNodeParameter('groupId', i) as string;
+
+						const response = await api.disperseGroup(groupId);
+
+						returnData.push({
+							json: {
+								status: "Thành công",
+								response: response,
+							},
+							pairedItem: {
+								item: i,
+							},
+						});
+					}
 				}
 			} catch (error) {
 				if (this.continueOnFail()) {

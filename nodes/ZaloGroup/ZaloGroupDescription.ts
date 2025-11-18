@@ -73,6 +73,12 @@ export const zaloGroupOperations: INodeProperties[] = [
 				description: 'Tạo ghi chú trong nhóm',
 				action: 'Tạo Ghi Chú',
 			},
+			{
+				name: 'Giải Tán Nhóm',
+				value: 'disperseGroup',
+				description: 'Giải tán nhóm',
+				action: 'Giải Tán Nhóm',
+			},
 		],
 		default: 'createGroup',
 	},
@@ -384,5 +390,23 @@ export const zaloGroupFields: INodeProperties[] = [
 			},
 		},
 		description: 'Ghim ghi chú lên đầu nhóm',
+	},
+
+	/* -------------------------------------------------------------------------- */
+	/*                            zaloGroup:disperseGroup                         */
+	/* -------------------------------------------------------------------------- */
+	{
+		displayName: 'ID Nhóm',
+		name: 'groupId',
+		type: 'string',
+		required: true,
+		default: '',
+		displayOptions: {
+			show: {
+				resource: ['zaloGroup'],
+				operation: ['disperseGroup'],
+			},
+		},
+		description: 'ID của nhóm cần giải tán',
 	},
 ]; 
